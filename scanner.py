@@ -3,6 +3,7 @@ from scapy.layers.dot11 import RadioTap, Dot11
 import os, signal, sys, string
 from pyfiglet import Figlet
 import time
+import subprocess
 
 #access_points = set()
 whitelisted_aps = []
@@ -51,7 +52,7 @@ def aps_scan(pkt):
     crypto = '/'.join(netstats['crypto'])
     ap.update({"ssid":ssid})
     ap.update({"mac":bssid})
-    ap.update({"sig_str":sig_str})
+    #ap.update({"sig_str":sig_str})
     ap.update({"channel":channel})
     ap.update({"crypto":crypto})
 
@@ -73,7 +74,6 @@ def aps_scan(pkt):
             parsed_list.append(ap)
         else:
             print("Not a valid selection")
-
 
 
 def monitor_scan(pkt):
@@ -110,15 +110,16 @@ def monitor_scan(pkt):
     crypto = '/'.join(netstats['crypto'])
     ap.update({"ssid": ssid})
     ap.update({"mac": bssid})
-    ap.update({"sig_str": sig_str})
+    #ap.update({"sig_str": sig_str})
     ap.update({"channel": channel})
     ap.update({"crypto": crypto})
 
     if (ap not in whitelisted_aps) or (ap in blacklisted_aps):
-        print("Rouge AP Detected!!!")
+        print("Rogue AP Detected!!!")
         print(ssid + " " + bssid + " " + sig_str + " " + channel + " " + crypto)
-        selection = input("1. Whitelist 2. Blacklist")
-
+        print("\n1. Whitelist\n" +
+              "2. Blacklist\n")
+        selection = input("Whitelist(1) or Blacklist(2): ")
         if selection == 1:
             whitelisted_aps.append(ap)
         elif selection == 2:
@@ -150,22 +151,25 @@ def init_scan():
     main_menu()
 
 def monitor():
-    global interface
+    interface = raw_input("Interface: ")
     sniff(iface=interface, lfilter=filter_beacon, prn=monitor_scan)
 
 
 def usage():
     print("\nList of commands \n\n" +
           "scan: Used to obtain initial whitelist \n" +
-          "monitor: Set RougeAPDetector to monitor mode \n" +
+          "monitor: Set RogueAPDetector to monitor mode \n" +
+          "show whitelist: Shows all whitelisted access points\n" +
+          "show blacklist: Shows all blacklisted access points\n" +
           "help: Displays this menu \n" +
-          "exit: Exits the program \n")
+          "exit: Exits the program \n" +
+          "clear: Clears the screen\n ")
     main_menu()
 
 def main_menu():
     #global whitelisted_aps
     #global blacklisted_aps
-    menu_cmd = str(raw_input("RougeAPDetector> "))
+    menu_cmd = str(raw_input("RogueAPDetector> "))
 
     if menu_cmd == "help":
         usage()
@@ -174,20 +178,26 @@ def main_menu():
     elif menu_cmd == "monitor":
         monitor()
     elif menu_cmd == "show whitelist":
-        print(whitelisted_aps)
+        print("\n Whitelisted Access Points--------------------------------------------------------------\n")
+        for i in whitelisted_aps:
+            print(i)
+            print("\n")
         main_menu()
     elif menu_cmd == "show blacklist":
         print(blacklisted_aps)
         main_menu()
     elif menu_cmd == "exit":
         exit()
+    elif menu_cmd == "clear":
+        subprocess.call("clear")
+        main_menu()
     else:
         print("Not a valid selection")
         main_menu()
 
 def intro():
     f = Figlet(font='slant')
-    word = 'ROUGE AP DETECTOR'
+    word = 'ROGUE AP DETECTOR'
     print f.renderText(word)
 
 def exit():
